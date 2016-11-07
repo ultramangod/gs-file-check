@@ -1,0 +1,8 @@
+{
+	"name" : "value",
+	"phenotype_trait" : "mdp_traits.txt",
+	"knowledge_path" : "Knowledge.txt",
+	"genotype_num" : "mdp_numeric.txt",
+	"type" : "numeric",
+	"tool_set" : []
+}
