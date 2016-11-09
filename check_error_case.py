@@ -1,28 +1,18 @@
 # -*- coding:utf-8 -*-
+# 输入所有错误用例，观测json输出错误结果
 import re
 import json
 import mdp_numeric_file_check
 import mdp_traits_file_check
 
 
-def read_json_file(file_name):
-    """
-    读配置文件
-    :param file_name:文件名
-    :return:所读配置文件
-    """
-    fin = open(file_name, "r")
-    task_config_json = fin.read()
-    return task_config_json
-
-
 def out_json_file(json_str):
     """
-    将结果输出到json文件
-    :param json_str:
-    :return:None
+    将错误输出至usecase_file_check_result.json文件
+    :param json_str:错误json字符串
+    :return:
     """
-    out_file_name = "./file_check_result.json"
+    out_file_name = "./usecase_file_check_result.json"
     out_file = open(out_file_name, "w")
     out_file.write(json_str)
     out_file.close()
@@ -161,35 +151,33 @@ def file_march(num_file, traits_file):
         return False
 
 
-def file_check(numeric_file, traits_file):
+def check_error_case():
     """
-    文件检查函数，查询输入的numeric文件和traits文件格式是否正确
-    如遇错误则输入错误详情至file_check_result.json文件
-    :param numeric_file:numeric文件
-    :param traits_file:traits文件
-    :return:格式正确返回true，否则返回false
+    检查测试用例
+    逐个将预估导致错误的测试用例使用filecheck函数检查
+    将返回结果导出到usecase_file_check_result.json
+    :return:
     """
+    numeric_file = "mdp_numeric.txt"
+    traits_file = "mdp_traits.txt"
+    numeric_list = ["file_type_01.7z", "firstrow_01.txt", "left_columnnum_01.txt", "miss_lefttitle_01.txt",
+                    "mismatch_data_01.txt", "wrong_data_01.txt"]
+    traits_list = ["file_type_02.7z", "left_columnnum_02.txt", "miss_lefttitle_02.txt", "wrong_data_02.txt",
+                   "under_10_percent_01.txt"]
     output = {}
     output["result"] = False
     output["error_list"] = []
-    if not mdp_numeric_file_check.is_text_file(numeric_file):
-        error_dict = {
-            "title": "mdp_numeric文件格式错误",
-            "msg": "文件不是有效txt文件",
-            "info": "计算所需文件为txt格式"
-        }
-        if error_dict not in output["error_list"]:
-            output["error_list"].append(error_dict)
-    elif not mdp_traits_file_check.is_text_file(traits_file):
-        error_dict = {
-            "title": "mdp_traits文件格式错误",
-            "msg": "文件不是有效的txt文件",
-            "info": "计算所需文件为txt格式"
-        }
-        if error_dict not in output["error_list"]:
-            output["error_list"].append(error_dict)
-    else:
-        numeric_data_sort(numeric_file, "Sorted_numeric.txt")
+    for numeric in numeric_list:
+        if not mdp_numeric_file_check.is_text_file(numeric):
+            error_dict = {
+                "title": "mdp_numeric文件格式错误",
+                "msg": "文件不是有效txt文件",
+                "info": "计算所需文件为txt格式"
+            }
+            if error_dict not in output["error_list"]:
+                output["error_list"].append(error_dict)
+            continue
+        numeric_data_sort(numeric, "Sorted_numeric.txt")
         traits_data_sort(traits_file, "Sorted_traits.txt")
         if not mdp_numeric_file_check.has_left_title("Sorted_numeric.txt")["result"]:
             error_row = mdp_numeric_file_check.has_left_title("Sorted_numeric.txt")["row"]
@@ -219,6 +207,18 @@ def file_check(numeric_file, traits_file):
             }
             if error_dict not in output["error_list"]:
                 output["error_list"].append(error_dict)
+    for traits in traits_list:
+        if not mdp_traits_file_check.is_text_file(traits):
+            error_dict = {
+                "title": "mdp_traits文件格式错误",
+                "msg": "文件不是有效的txt文件",
+                "info": "计算所需文件为txt格式"
+            }
+            if error_dict not in output["error_list"]:
+                output["error_list"].append(error_dict)
+            continue
+        numeric_data_sort(numeric_file, "Sorted_numeric.txt")
+        traits_data_sort(traits, "Sorted_traits.txt")
         if not mdp_traits_file_check.has_left_title("Sorted_traits.txt")["result"]:
             error_row = mdp_traits_file_check.has_left_title("Sorted_traits.txt")["row"]
             error_dict = {
@@ -245,27 +245,7 @@ def file_check(numeric_file, traits_file):
             }
             if error_dict not in output["error_list"]:
                 output["error_list"].append(error_dict)
-    if len(output["error_list"]) == 0:
-        output["result"] = True
-        out_json_file(json.dumps(output, ensure_ascii=False))
-        return True
-    else:
-        out_json_file(json.dumps(output, ensure_ascii=False))
-        print "error_msg in file_check_result.json"
-        print json.dumps(output, ensure_ascii=False)
-        return False
+    out_json_file(json.dumps(output, ensure_ascii=False))
 
 
-def main():
-    """
-    读配置信息，检查文件
-    :return:
-    """
-    config_file = "task.gacfg"
-    config_json = eval(read_json_file(config_file))
-    numeric_file = config_json["genotype_num"]
-    traits_file = config_json["phenotype_trait"]
-    file_check(numeric_file, traits_file)
-
-
-main()
+check_error_case()
